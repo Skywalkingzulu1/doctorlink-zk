@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic[email]
+pydantic-settings
+python-multipart
+python-dotenv
+aiofiles
+jinja2
+stellar-sdk
+httpx

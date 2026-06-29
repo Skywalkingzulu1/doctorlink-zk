@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+
+# Node
+node_modules/
+
+# Rust / Noir
+**/target/
+**/proof_data/
+
+# DB
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Other repos
+doctorlink-repo/
+
+# Secrets
+**/*.key
+**/*.pem

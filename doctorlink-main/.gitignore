@@ -1,0 +1,5 @@
+# Secrets (do not commit)
+.stellar_secrets
+.env
+.env.*
+target/

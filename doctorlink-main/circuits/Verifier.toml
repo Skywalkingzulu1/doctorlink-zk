@@ -1,0 +1,4 @@
+# Public inputs for verification
+# age_check: is_eligible = 1, min_age = 18
+# license_verify: is_verified = 1, license_hash = "0x1234deadbeef"
+# vaccine_status: is_compliant = 1, patient_vaccine_hash = "0xabcd1234"

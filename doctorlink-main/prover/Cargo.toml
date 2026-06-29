@@ -1,0 +1,16 @@
+[package]
+name = "doctorlink-prover"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ark-bn254 = "0.4.0"
+ark-groth16 = { version = "0.4.0", features = ["r1cs"] }
+ark-relations = "0.4.0"
+ark-ff = "0.4.2"
+ark-serialize = "0.4.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+rand = "0.8"
+clap = { version = "4", features = ["derive"] }

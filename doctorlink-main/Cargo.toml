@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "contracts/doctorlink-verifier",
+    "contracts/doctorlink-token", "prover",
+]
+resolver = "2"

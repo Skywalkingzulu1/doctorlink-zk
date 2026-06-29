@@ -1,0 +1,13 @@
+# Age eligibility: patient DOB year = 1995, min_age = 18 (verified 2026)
+dob_year = 1995
+current_year = 2026
+min_age = 18
+
+# License verification
+license_number = "98765"
+license_hash = "0x1234deadbeef"
+
+# Vaccination status
+patient_vaccine_hash = "0xabcd1234"
+required_vaccine = "COVID-19"
+is_compliant = 1
