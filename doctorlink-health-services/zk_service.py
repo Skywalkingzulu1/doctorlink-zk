@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 from datetime import datetime
@@ -58,7 +59,8 @@ def _call_prover(*cli_args: str) -> Dict:
         )
         result = _run(["wsl", "bash", "-l", "-c", cmd])
     else:
-        cmd = [PROVER_PATH] + list(cli_args[1:]) + pk_arg.split()
+        extra = shlex.split(cli_args[1]) if len(cli_args) > 1 else []
+        cmd = [PROVER_PATH] + extra + pk_arg.split()
         result = _run(cmd)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
