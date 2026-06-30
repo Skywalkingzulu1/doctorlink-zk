@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .env
+*.log
 
 # Node
 node_modules/
@@ -35,15 +36,27 @@ doctorlink-repo/
 **/*.key
 **/*.pem
 
-# Debug / disposable scripts
-set_env.py
-set_env2.py
-fix_txns.py
-fix_txns2.py
-update_cmd.py
-fix_build.py
-fix_path.py
-deploy_now.py
-monitor_deploy.py
-check_runtime.py
-get_recent_logs.py
+# Debug scripts — never tracked
+check_*.py
+debug_*.py
+deploy_*.py
+fix_*.py
+get_*.py
+list_*.py
+log_*.py
+monitor*.py
+parse_*.py
+retry_*.py
+run_frontend.py
+set_env*.py
+show_*.py
+trigger_deploy.py
+update_build.py
+wait_deploy.py
+
+# Debug artifacts
+deploy.json
+txs*.json
+server_*.txt
+test_stellar*.sh
+stellar-hacks-zk-hackathon-info.md
