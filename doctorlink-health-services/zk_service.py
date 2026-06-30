@@ -9,7 +9,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, List, Optional, Any
 
 from hpcsa_check import check_registration, HPCSAResult
 
@@ -87,6 +87,22 @@ class ZKProofService:
         self.network = network
         self.contract_id = contract_id
         self.token_contract_id = token_contract_id
+        self._stellar_config_dir = self._setup_stellar_config()
+
+    @staticmethod
+    def _setup_stellar_config() -> Optional[str]:
+        if _IS_WINDOWS:
+            return None
+        sk = os.environ.get("STELLAR_SECRET_KEY", "")
+        if not sk:
+            return None
+        cfg_dir = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+        identity_dir = Path(cfg_dir) / "stellar" / "identity"
+        identity_dir.mkdir(parents=True, exist_ok=True)
+        identity_file = identity_dir / "funded.toml"
+        if not identity_file.exists():
+            identity_file.write_text(f'secret_key = "{sk}"\n', encoding="utf-8")
+        return cfg_dir
 
     # ── Proof Generation ─────────────────────────────────────────
 
@@ -180,14 +196,17 @@ class ZKProofService:
             result = _run(["wsl", "bash", "-l", "-c", cmd_str])
         else:
             flat = [shlex.split(a) for a in args]
-            cmd_parts = [
-                "stellar", "contract", "invoke",
+            cmd_parts: List[str] = ["stellar"]
+            if self._stellar_config_dir:
+                cmd_parts.extend(["--config-dir", self._stellar_config_dir + "/stellar"])
+            cmd_parts.extend([
+                "contract", "invoke",
                 "--id", contract_id,
                 "--network", self.network,
                 "--source-account", "funded",
                 "--send=yes",
                 "--", func,
-            ]
+            ])
             for parts in flat:
                 cmd_parts.extend(parts)
             result = _run(cmd_parts)
