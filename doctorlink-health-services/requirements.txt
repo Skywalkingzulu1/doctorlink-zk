@@ -1,3 +1,4 @@
+fasthtml
 fastapi
 uvicorn[standard]
 sqlalchemy

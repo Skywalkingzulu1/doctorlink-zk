@@ -1,0 +1,31 @@
+services:
+  - type: web
+    runtime: python
+    name: doctorlink
+    repo: https://github.com/Skywalkingzulu1/doctorlink-zk
+    rootDir: doctorlink-health-services
+    region: oregon
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      curl -L -o stellar-cli.tar.gz https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-ubuntu-x86_64.tar.gz
+      tar xzf stellar-cli.tar.gz
+      chmod +x stellar
+      mv stellar /usr/local/bin/stellar
+      rm -f stellar-cli.tar.gz
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: STELLAR_NETWORK
+        value: testnet
+      - key: ZK_VERIFIER_CONTRACT
+        value: CAB7ZADYO7M7NWYBNCMLTLO4SCQTHGHMW5QBMWJBOSA5HKMOUFTN6AN2
+      - key: HEALTH_TOKEN_CONTRACT
+        value: CBZ5ZNC6I4NOWKGFJOECMYJWUQ2QGQZ622PJQIV6EK427WVS3HONQGRT
+      - key: SECRET_KEY
+        generateValue: true
+      - key: STELLAR_SECRET_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OCTOPARSE_API_KEY
+        sync: false

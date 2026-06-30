@@ -11,6 +11,11 @@ node_modules/
 **/target/
 **/proof_data/
 
+# Allow specific binaries and proof data needed for Render deployment
+!doctorlink-health-services/doctorlink-prover
+!doctorlink-health-services/proof_data/
+!doctorlink-health-services/proof_data/*.bin
+
 # DB
 *.db
 *.sqlite

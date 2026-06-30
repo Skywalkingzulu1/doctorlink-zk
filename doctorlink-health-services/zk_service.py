@@ -5,17 +5,22 @@ import json
 import os
 import re
 import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, List, Any
+from typing import Dict, Optional, Any
 
 from hpcsa_check import check_registration, HPCSAResult
 
+_IS_WINDOWS = sys.platform == "win32"
+
+_HERE = Path(__file__).parent
+
 PROVER_PATH = os.getenv(
     "DOCTORLINK_PROVER",
-    str(Path(__file__).parent.parent / "doctorlink-main" / "target" / "release" / "doctorlink-prover"),
+    str(_HERE / "doctorlink-prover"),
 )
-PROVER_CACHE = Path(__file__).parent.parent / "doctorlink-main" / "proof_data"
+PROVER_CACHE = Path(os.getenv("DOCTORLINK_PROVER_CACHE", str(_HERE / "proof_data")))
 
 
 class ProofError(Exception):
@@ -23,6 +28,8 @@ class ProofError(Exception):
 
 
 def _ensure_wsl_path(win_path: str) -> str:
+    if not _IS_WINDOWS:
+        return str(Path(win_path).resolve())
     abs_path = str(Path(win_path).resolve())
     if abs_path[1] == ":":
         drive = abs_path[0].lower()
@@ -31,31 +38,38 @@ def _ensure_wsl_path(win_path: str) -> str:
     return abs_path
 
 
-def _call_prover(*cli_args: str) -> Dict:
-    cmd = (
-        f'source "$HOME/.cargo/env" && '
-        f'{_ensure_wsl_path(PROVER_PATH)} '
-        f'--pk-path {_ensure_wsl_path(str(PROVER_CACHE))}/{cli_args[0]}_pk.bin '
-        + " ".join(cli_args[1:])
-    )
+def _run(cmd_args: list, timeout: int = 120) -> subprocess.CompletedProcess:
     try:
-        result = subprocess.run(
-            ["wsl", "bash", "-l", "-c", cmd],
-            capture_output=True, timeout=120,
-        )
-        stdout = result.stdout.decode("utf-8", errors="replace")
-        stderr = result.stderr.decode("utf-8", errors="replace")
-        if result.returncode != 0:
-            raise ProofError(f"Prover failed: {stderr.strip()[:300]}")
-        for line in reversed(stdout.strip().split("\n")):
-            line = line.strip()
-            if line.startswith("{"):
-                return json.loads(line)
-        raise ProofError("No JSON output from prover")
+        return subprocess.run(cmd_args, capture_output=True, timeout=timeout)
     except FileNotFoundError:
-        raise ProofError("WSL not found")
+        raise ProofError(f"Command not found: {cmd_args[0]}")
     except subprocess.TimeoutExpired:
-        raise ProofError("Prover timed out")
+        raise ProofError("Command timed out")
+
+
+def _call_prover(*cli_args: str) -> Dict:
+    pk_arg = f"--pk-path {_ensure_wsl_path(str(PROVER_CACHE))}/{cli_args[0]}_pk.bin"
+    if _IS_WINDOWS:
+        cmd = (
+            f'source "$HOME/.cargo/env" && '
+            f'{_ensure_wsl_path(PROVER_PATH)} '
+            f'{pk_arg} '
+            + " ".join(cli_args[1:])
+        )
+        result = _run(["wsl", "bash", "-l", "-c", cmd])
+    else:
+        cmd = [PROVER_PATH] + cli_args[1:] + pk_arg.split()
+        result = _run(cmd)
+
+    stdout = result.stdout.decode("utf-8", errors="replace")
+    stderr = result.stderr.decode("utf-8", errors="replace")
+    if result.returncode != 0:
+        raise ProofError(f"Prover failed: {stderr.strip()[:300]}")
+    for line in reversed(stdout.strip().split("\n")):
+        line = line.strip()
+        if line.startswith("{"):
+            return json.loads(line)
+    raise ProofError("No JSON output from prover")
 
 
 _INTERNAL_TO_CONTRACT = {
@@ -99,7 +113,6 @@ class ZKProofService:
 
     def check_hpcsa(self, license_number: str, surname: str = "",
                     first_name: str = "") -> Dict[str, Any]:
-        """Query HPCSA iRegister for a doctor's registration status."""
         result: HPCSAResult = check_registration(license_number, surname, first_name)
         d = result.to_dict()
         d["checked_at"] = datetime.utcnow().isoformat()
@@ -152,26 +165,26 @@ class ZKProofService:
     # ── Stellar Submission ───────────────────────────────────────
 
     def _clijson(self, contract_id: str, func: str, *args: str) -> Dict:
-        cmd = (
-            f"stellar contract invoke --id {contract_id} --network {self.network} "
-            f"--source-account funded --send=yes -- {func} " + " ".join(args)
-        )
-        try:
-            result = subprocess.run(
-                ["wsl", "bash", "-l", "-c", cmd],
-                capture_output=True, timeout=120,
-            )
-            stdout = result.stdout.decode("utf-8", errors="replace")
-            stderr = result.stderr.decode("utf-8", errors="replace")
-            output = stdout + stderr
-            if result.returncode != 0:
-                raise ProofError(f"CLI error: {output.strip()[:500]}")
-            tx = re.search(r"tx/([a-f0-9]{64})", output)
-            return {"success": True, "tx_hash": tx.group(1) if tx else "unknown"}
-        except FileNotFoundError:
-            raise ProofError("WSL not found")
-        except subprocess.TimeoutExpired:
-            raise ProofError("CLI timed out")
+        cmd_parts = [
+            "stellar", "contract", "invoke",
+            "--id", contract_id,
+            "--network", self.network,
+            "--source-account", "funded",
+            "--send=yes",
+            "--", func,
+        ] + list(args)
+        if _IS_WINDOWS:
+            cmd_str = " ".join(cmd_parts)
+            result = _run(["wsl", "bash", "-l", "-c", cmd_str])
+        else:
+            result = _run(cmd_parts)
+        stdout = result.stdout.decode("utf-8", errors="replace")
+        stderr = result.stderr.decode("utf-8", errors="replace")
+        output = stdout + stderr
+        if result.returncode != 0:
+            raise ProofError(f"CLI error: {output.strip()[:500]}")
+        tx = re.search(r"tx/([a-f0-9]{64})", output)
+        return {"success": True, "tx_hash": tx.group(1) if tx else "unknown"}
 
     def submit_to_stellar(self, proof_hash: str, public_signals: Dict,
                           contract_id: Optional[str] = None) -> Dict:
