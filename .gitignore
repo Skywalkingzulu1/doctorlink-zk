@@ -35,6 +35,7 @@ doctorlink-repo/
 # Secrets
 **/*.key
 **/*.pem
+.sesskey
 
 # Debug scripts — never tracked
 check_*.py
