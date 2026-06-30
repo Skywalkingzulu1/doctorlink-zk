@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 
 from fasthtml.common import *
-from zk_service import ZKProofService, get_zk_service
+from zk_service import ZKProofService, get_zk_service, ProofError
 from ai_service import AIService, get_ai_service
 from clinic_service import ClinicService, get_clinic_service
 
@@ -680,7 +680,10 @@ def get(pid: int):
     proof = svc.generate_age_proof(dob, cur, 18)
     signals = proof["public_signals"]
     signals["circuit"] = "age_check"
-    result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    try:
+        result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    except ProofError as e:
+        result = {"success": False, "error": str(e)}
     return layout(
         "Age Verification — DoctorLink",
         Div(
@@ -733,7 +736,10 @@ def get(did: int):
     proof = svc.generate_license_proof(d.license_number, did)
     signals = proof["public_signals"]
     signals["circuit"] = "license_verify"
-    result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    try:
+        result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    except ProofError as e:
+        result = {"success": False, "error": str(e)}
     return layout(
         "License Verification — DoctorLink",
         Div(
@@ -820,7 +826,10 @@ def get(pid: int):
     proof = svc.generate_vaccine_proof(pid, vtype)
     signals = proof["public_signals"]
     signals["circuit"] = "vaccine_status"
-    result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    try:
+        result = svc.submit_to_stellar(proof["proof_hash"], signals)
+    except ProofError as e:
+        result = {"success": False, "error": str(e)}
     return layout(
         "Vaccine — DoctorLink",
         Div(

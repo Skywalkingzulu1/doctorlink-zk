@@ -167,18 +167,29 @@ class ZKProofService:
     # ── Stellar Submission ───────────────────────────────────────
 
     def _clijson(self, contract_id: str, func: str, *args: str) -> Dict:
-        cmd_parts = [
-            "stellar", "contract", "invoke",
-            "--id", contract_id,
-            "--network", self.network,
-            "--source-account", "funded",
-            "--send=yes",
-            "--", func,
-        ] + list(args)
         if _IS_WINDOWS:
-            cmd_str = " ".join(cmd_parts)
+            cmd_str = (
+                "stellar contract invoke "
+                f"--id {contract_id} "
+                f"--network {self.network} "
+                "--source-account funded "
+                "--send=yes "
+                f"-- {func} "
+                + " ".join(args)
+            )
             result = _run(["wsl", "bash", "-l", "-c", cmd_str])
         else:
+            flat = [shlex.split(a) for a in args]
+            cmd_parts = [
+                "stellar", "contract", "invoke",
+                "--id", contract_id,
+                "--network", self.network,
+                "--source-account", "funded",
+                "--send=yes",
+                "--", func,
+            ]
+            for parts in flat:
+                cmd_parts.extend(parts)
             result = _run(cmd_parts)
         stdout = result.stdout.decode("utf-8", errors="replace")
         stderr = result.stderr.decode("utf-8", errors="replace")
