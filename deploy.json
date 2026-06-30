@@ -1,0 +1,28 @@
+{
+  "type": "web_service",
+  "name": "doctorlink",
+  "ownerId": "tea-cvmolmp5pdvs73e388g0",
+  "repo": "https://github.com/Skywalkingzulu1/doctorlink-zk",
+  "branch": "main",
+  "serviceDetails": {
+    "runtime": "python",
+    "buildCommand": "pip install -r requirements.txt",
+    "startCommand": "uvicorn main:app --host 0.0.0.0 --port $PORT",
+    "plan": "free",
+    "region": "oregon",
+    "rootDir": "doctorlink-health-services",
+    "pullRequestPreviewsEnabled": false,
+    "envSpecificDetails": {
+      "pythonVersion": "3.11"
+    },
+    "envVars": [
+      {"key": "STELLAR_NETWORK", "value": "testnet"},
+      {"key": "ZK_VERIFIER_CONTRACT", "value": "CAB7ZADYO7M7NWYBNCMLTLO4SCQTHGHMW5QBMWJBOSA5HKMOUFTN6AN2"},
+      {"key": "HEALTH_TOKEN_CONTRACT", "value": "CBZ5ZNC6I4NOWKGFJOECMYJWUQ2QGQZ622PJQIV6EK427WVS3HONQGRT"},
+      {"key": "SECRET_KEY", "generateValue": true},
+      {"key": "STELLAR_SECRET_KEY", "sync": false},
+      {"key": "OPENROUTER_API_KEY", "sync": false},
+      {"key": "OCTOPARSE_API_KEY", "sync": false}
+    ]
+  }
+}
