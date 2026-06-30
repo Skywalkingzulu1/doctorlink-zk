@@ -683,6 +683,7 @@ def get(pid: int):
     try:
         result = svc.submit_to_stellar(proof["proof_hash"], signals)
     except ProofError as e:
+        import sys; print(f"ProofError: {e}", file=sys.stderr)
         result = {"success": False, "error": str(e)}
     return layout(
         "Age Verification — DoctorLink",
