@@ -58,7 +58,7 @@ def _call_prover(*cli_args: str) -> Dict:
         )
         result = _run(["wsl", "bash", "-l", "-c", cmd])
     else:
-        cmd = [PROVER_PATH] + cli_args[1:] + pk_arg.split()
+        cmd = [PROVER_PATH] + list(cli_args[1:]) + pk_arg.split()
         result = _run(cmd)
 
     stdout = result.stdout.decode("utf-8", errors="replace")
